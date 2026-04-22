@@ -28,7 +28,9 @@ class ActiveInactiveStrategy implements StatusStrategyInterface
      */
     public function toggle(Model $entity): void
     {
-        $field = $this->statusField;
+        // Détection automatique du champ (status ou statut)
+        $field = isset($entity->status) ? 'status' : (isset($entity->statut) ? 'statut' : 'status');
+        
         $entity->$field = ($entity->$field === 'Actif') ? 'Inactif' : 'Actif';
         $entity->save();
     }

@@ -167,7 +167,7 @@
                                                     onclick="setCategoryId({{ $categorie->id }})"
                                                     data-id="{{ $categorie->id }}"
                                                     data-nom="{{ $categorie->Nom }}"
-                                                    data-catp=" {{ $categorie->categoriesp->Nom }}"
+                                                    data-catp=" {{ optional($categorie->categoriesp)->Nom }}"
                                                     data-reference="{{ $categorie->Référence }}">
                                                     <th class="dt-checkboxes-cell dt-checkboxes-select-all">
                                                         <input type="checkbox"
@@ -186,7 +186,7 @@
                                                         {{ $categorie->Référence }}</td>
                                                     <td
                                                         class="px-6 py-4 whitespace-no-wrap text-sm leading-5 text-gray-500">
-                                                        {{ $categorie->categoriesp->Nom }}</td>
+                                                        {{ optional($categorie->categoriesp)->Nom }}</td>
                                                     <td
                                                         class="px-6 py-4 whitespace-no-wrap text-sm leading-5 text-gray-500">
                                                         Produit ( {{ $categorie->Produit }})</td>
@@ -276,7 +276,7 @@
                                                     {{ $categorie->Référence }} </td>
                                                 <td
                                                     class="px-6 py-4 whitespace-no-wrap text-sm leading-5 text-gray-500">
-                                                    {{ $categorie->categoriesp->Nom }}</td>
+                                                    {{ optional($categorie->categoriesp)->Nom }}</td>
                                                 <td
                                                     class="px-6 py-4 whitespace-no-wrap text-sm leading-5 text-gray-500">
                                                     Produit ({{ $categorie->Produit }}) </td>

@@ -42,10 +42,28 @@ class MenuService
 
         // Résolution de la catégorie parente si nécessaire
         if ($categoryFieldName && isset($data[$categoryFieldName])) {
-            // Si on crée une Categorie, le parent est une Categoriep
-            $parentClass = ($modelClass === \App\Models\Categorie::class) ? \App\Models\Categoriep::class : \App\Models\Categorie::class;
+            // Détermination de la classe parente
+            $parentClass = \App\Models\Categorie::class; // Défaut
+            if ($modelClass === \App\Models\Categorie::class) {
+                $parentClass = \App\Models\Categoriep::class;
+            } elseif ($modelClass === \App\Models\Optionmodif::class) {
+                $parentClass = \App\Models\Modif::class;
+            }
+
             $category = $parentClass::where('Nom', $data[$categoryFieldName])->firstOrFail();
-            $data['categorie_id'] = $category->id;
+            
+            // Détermination de la clé étrangère
+            $foreignKey = 'categorie_id'; // Défaut
+            if ($modelClass === \App\Models\Categorie::class) {
+                $foreignKey = 'categoriep_id';
+            } elseif ($modelClass === \App\Models\Optionmodif::class) {
+                $foreignKey = 'modificateur_id';
+            }
+
+            $data[$foreignKey] = $category->id;
+            
+            // IMPORTANT : On supprime le champ temporaire pour éviter l'erreur SQL
+            unset($data[$categoryFieldName]);
         }
 
         return $modelClass::create($data);
@@ -112,10 +130,13 @@ class MenuService
             $category = $parentClass::where('Nom', $data[$categoryFieldName])->firstOrFail();
             
             // On utilise la méthode de relation dynamique si possible
-            $relationName = ($entity instanceof \App\Models\Optionmodif) ? 'modify' : (($entity instanceof \App\Models\Cartefidelite) ? 'category' : 'categorie');
+            $relationName = ($entity instanceof \App\Models\Optionmodif) ? 'modify' : (($entity instanceof \App\Models\Cartefidelite) ? 'category' : (($entity instanceof \App\Models\Categorie) ? 'categoriesp' : 'categorie'));
             if (method_exists($entity, $relationName)) {
                 $entity->$relationName()->associate($category);
             }
+
+            // IMPORTANT : On supprime le champ pour éviter l'erreur SQL
+            unset($data[$categoryFieldName]);
         }
 
         $entity->update($data);

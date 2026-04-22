@@ -20,6 +20,12 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->bind(StatusStrategyInterface::class, ActiveInactiveStrategy::class);
         $this->app->bind(NotificationServiceInterface::class, EmailNotificationService::class);
+
+        // SOLID: Contextual Binding
+        // On définit quelle stratégie utiliser selon le contrôleur
+        $this->app->when(\App\Http\Controllers\EmaillController::class)
+                  ->needs(StatusStrategyInterface::class)
+                  ->give(\App\Services\Strategies\VerbalStatusStrategy::class);
     }
 
     /**

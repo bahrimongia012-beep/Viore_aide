@@ -8,8 +8,17 @@ use App\Models\Restaurant;
 use App\Models\Employe;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Http\Request;
+use App\Contracts\StatusStrategyInterface;
+
 class EmaillController extends Controller
 {
+    private StatusStrategyInterface $statusStrategy;
+
+    public function __construct(StatusStrategyInterface $statusStrategy)
+    {
+        $this->statusStrategy = $statusStrategy;
+    }
+
     public function create(EmployeRequest $request)
     {      
         $email = $request->input('Email');
@@ -45,9 +54,8 @@ class EmaillController extends Controller
         $password = $request->input('password');
         Mail::to($email)->send(new Email($email, $password));
         
-        // Mettre à jour le statut du restaurant
-        $restaurant->status = 'activer';
-        $restaurant->save();
+        // GoF: Strategy — délègue le changement de statut (activer/inactiver)
+        $this->statusStrategy->toggle($restaurant);
 
         // Redirection vers une autre page après avoir soumis le formulaire
         return redirect('SlimsDigital/allcustomers');
@@ -61,9 +69,8 @@ class EmaillController extends Controller
         // Rechercher le restaurant par e-mail
         $restaurant = Restaurant::where('customerEmail', $customerEmail)->firstOrFail();
        
-        // Mettre à jour le statut du restaurant
-        $restaurant->status = 'inactiver';
-        $restaurant->save();
+        // GoF: Strategy — délègue le changement de statut (activer/inactiver)
+        $this->statusStrategy->toggle($restaurant);
     
         // Rediriger vers une autre page après avoir soumis le formulaire
         return redirect('SlimsDigital/allcustomers');

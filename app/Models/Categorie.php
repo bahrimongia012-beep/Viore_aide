@@ -12,7 +12,7 @@ class Categorie extends Model
     use SoftDeletes;
 
     protected $table = 'Categories';
-    protected $fillable = ['Nom', 'photo', 'Categoriep', 'Référence', 'Produit', 'Combinaisons', 'Cartes_cadeau'];
+    protected $fillable = ['Nom', 'photo', 'categoriep_id', 'Référence', 'Produit', 'Combinaisons', 'Cartes_cadeau'];
 
     protected $primaryKey = 'id';
     public $incrementing = false;
