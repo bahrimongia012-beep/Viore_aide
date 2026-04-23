@@ -1,38 +1,53 @@
 <?php
 
-    namespace App\Http\Controllers;
-    
-    use App\Models\Categoriep;
-    use App\Models\Categorie;
-    use Illuminate\Http\Request;
-    class MenuController extends Controller
-    {
-        public function create(){
-            $Categoriep = Categoriep::all();
-            return view('admin.menu', compact('Categoriep'));
-        }
-       
-    
-        public function showSubcategories($categoriep_id)
-        {      $Categoriep = Categoriep::all();
-            // Recherchez la catégorie principale correspondant à l'ID spécifié avec ses sous-catégories associées
-                 $categorie = Categoriep::findOrFail($categoriep_id);
-                  $sousCategories = $categorie->categories;
-        
-            // Passez la catégorie principale et ses sous-catégories à la vue
-            return view('admin.menucat', compact('Categoriep', 'sousCategories'));
-        }
-        public function produit($categoriep_id)
-        
-        {         $Categoriep = Categoriep::all();
-                 $Categorie = Categorie::all();
-            // Recherchez la catégorie principale correspondant à l'ID spécifié avec ses sous-catégories associées
-                 $produit = Categorie::findOrFail($categoriep_id);
-                  $prod = $produit->produits;
-        
-            // Passez la catégorie principale et ses sous-catégories à la vue
-            return view('admin.menuprod', compact('Categoriep', 'prod'));
-        }
-    }
-    
+namespace App\Http\Controllers;
 
+use App\Repositories\ProduitRepositoryInterface;
+use App\Models\Categorie;
+use Illuminate\Http\Request;
+
+/**
+ * Patron Proxy — Client
+ *
+ * MenuController ne connaît que ProduitRepositoryInterface.
+ * Il ne sait pas s'il parle au vrai repository ou au Proxy.
+ * C'est le conteneur Laravel qui injecte le Proxy automatiquement.
+ */
+class MenuController extends Controller
+{
+    private ProduitRepositoryInterface $produitRepo;
+
+    // Injection par constructeur — Laravel injecte le Proxy
+    public function __construct(ProduitRepositoryInterface $produitRepo)
+    {
+        $this->produitRepo = $produitRepo;
+    }
+
+    public function create()
+    {
+        // ✅ Proxy : 1ère fois → requête DB | fois suivantes → cache mémoire
+        $Categoriep = $this->produitRepo->getCategories();
+        return view('admin.menu', compact('Categoriep'));
+    }
+
+    public function showSubcategories($categoriep_id)
+    {
+        // ✅ Proxy : retourne le cache — pas de nouvelle requête SQL
+        $Categoriep = $this->produitRepo->getCategories();
+        $categorie  = Categorie::findOrFail($categoriep_id)->categoriep;
+        $sousCategories = $categorie ? $categorie->categories : collect();
+
+        return view('admin.menucat', compact('Categoriep', 'sousCategories'));
+    }
+
+    public function produit($categoriep_id)
+    {
+        // ✅ Proxy : retourne le cache — pas de nouvelle requête SQL
+        $Categoriep = $this->produitRepo->getCategories();
+
+        $produit = Categorie::findOrFail($categoriep_id);
+        $prod    = $produit->produits;
+
+        return view('admin.menuprod', compact('Categoriep', 'prod'));
+    }
+}

@@ -7,6 +7,9 @@ use App\Models\Produit;
 use App\Models\Commands;
 use App\Models\Employe;
 use App\Notifications\OrderCreated;
+use App\Handlers\PanierNonVideHandler;
+use App\Handlers\PrixValideHandler;
+use App\Handlers\ProduitsDisponiblesHandler;
 
 /**
  * Patron Template Method — Classe abstraite
@@ -88,11 +91,27 @@ abstract class AbstractPanierController extends Controller
      */
     public function save(Request $request)
     {
+        // ═══════════════════════════════════════════════════════
+        // Patron Chain of Responsibility — Pipeline de validation
+        // Chaque handler valide une règle métier avant de passer
+        // au suivant. Si un handler échoue, la commande est rejetée.
+        // ═══════════════════════════════════════════════════════
+        $panier = session()->get($this->getSessionKey(), []);
+
+        $handler1 = new PanierNonVideHandler();
+        $handler1->setNext(new PrixValideHandler())
+                 ->setNext(new ProduitsDisponiblesHandler());
+
+        $erreur = $handler1->handle($request, $panier);
+
+        if ($erreur !== null) {
+            // Un handler a bloqué la chaîne — on retourne l'erreur
+            return redirect()->back()->withErrors([$erreur['champ'] => $erreur['message']]);
+        }
+        // ═══════════════════════════════════════════════════════
+
         // Étape 1 — validation (spécifique à chaque sous-classe)
         $data = $this->validerDonnees($request);
-
-        // Étape 2 — récupérer le contenu du panier
-        $panier = session()->get($this->getSessionKey(), []);
 
         // Étape 3 — formater les produits
         $produits = [];
