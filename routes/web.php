@@ -262,3 +262,17 @@ Route::put('/reductions/restore/{id}', [CompteRestaurantController::class, 'rest
 Route::post('/article/modif/{article}', [CompteRestaurantController::class, 'ajoutFourniArticle'])->name('ajoutfourniarticle');
 Route::post('/produit/{id}/dupliquer', [MenuController::class, 'dupliquerProduit'])
     ->name('produit.dupliquer');
+Route::post('/combos/{id}/dupliquer', [MenuController::class, 'dupliquerCombo'])->name('combo.dupliquer');
+
+Route::post('/produit/prix-avec-options', 
+    [CartController::class, 'calculerPrixAvecOptions'])
+    ->name('produit.prixOptions');
+
+
+Route::post('/rapport/caisse',
+    [CaisseController::class, 'rapportCaisse'])
+    ->name('rapport.caisse');
+
+Route::post('/rapport/commandes',
+    [CaisseController::class, 'rapportCommandes'])
+    ->name('rapport.commandes');
